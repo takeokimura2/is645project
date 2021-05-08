@@ -195,12 +195,32 @@ app.get("/create", (req, res) => {
     cussalesytd: "",
     cussalesprev: "",
   };
-  res.render("create", { cust: customer });
+  res.render("create", {
+    cust: customer,
+    type: "get",
+  });
 });
 
 // POST /create
 app.post("/create", (req, res) => {
 
-  dblib.addCustomers(req.body);
+  dblib.addCustomers(req.body)
+    .then(result => {
+      console.log("result from addCustomers is:", result);
+      res.render("create", {
+        type: "post",
+        result: result.trans,
+        msg: "success",
+        cust: req.body
+      })
+    })
+    .catch(err => {
+      console.log("error detail:", result);
+      res.render("create", {
+        type: "post",
+        msg: `Error: ${err.message}`,
+        cust: req.body
+      });
+    });
 
 });
