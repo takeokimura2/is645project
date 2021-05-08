@@ -161,37 +161,69 @@ const addCustomers = (customer) => {
   // Declare variables
   var i = 1;
   params = [];
-  sql = "INSERT INTO CUSTOMER (cusid, cusfname, cuslname, cusstate, cussalesytd, cussalesprev) VALUES ($1, $2, $3, $4, $5, $6)";
+  value = "";
+  columns = "";
+
 
   // Check data provided and build query as necessary
   if (customer.cusid !== "") {
     params.push(parseInt(customer.cusid));
+    columns += "cusid";
+    value += `$${i}`
     i++;
   };
   if (customer.cusfname !== "") {
-    params.push(`${customer.cusfname}%`);
+    params.push(`${customer.cusfname}`);
+    columns += ", cusfname";
+    value += `, $${i}`
     i++;
   };
   if (customer.cuslname !== "") {
-    params.push(`${customer.cuslname}%`);
+    params.push(`${customer.cuslname}`);
+    columns += ", cuslname";
+    value += `, $${i}`
     i++;
   };
   if (customer.cusstate !== "") {
-    params.push(`${customer.cusstate}%`);
+    params.push(`${customer.cusstate.toUpperCase()}`);
+    columns += ", cusstate";
+    value += `, $${i}`
     i++;
-  };
+  }
   if (customer.cussalesytd !== "") {
     params.push(parseFloat(customer.cussalesytd));
+    columns += ", cussalesytd";
+    value += `, $${i}`
     i++;
-  };
+  }
   if (customer.cussalesprev !== "") {
     params.push(parseFloat(customer.cussalesprev));
+    columns += ", cussalesprev";
+    value += `, $${i}`
     i++;
-  };
+  }
 
-  console.log(customer);
+  sql = `INSERT INTO CUSTOMER (${columns}) VALUES (${value})`;
+
+  //for debugging purpose
+  console.log(columns);
   console.log(params);
-  console.log(customer.cusid);
+  console.log(value);
+  console.log(sql);
+
+  return pool.query(sql, params)
+    .then(result => {
+      return {
+        trans: "success",
+        result: result.rows
+      }
+    })
+    .catch(err => {
+      return {
+        trans: "Error",
+        result: `Error: ${err.message}`
+      }
+    });
 
 }
 
