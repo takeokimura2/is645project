@@ -209,7 +209,7 @@ app.post("/create", (req, res) => {
       console.log("result from addCustomers is:", result);
       res.render("create", {
         type: "post",
-        result: result.trans,
+        result: result,
         msg: "success",
         cust: req.body
       })
@@ -224,3 +224,71 @@ app.post("/create", (req, res) => {
     });
 
 });
+
+
+app.get("/import", async (req, res) => {
+
+  const totRecs = await dblib.getTotalRecords();
+
+  res.render("import", {
+    type: "get",
+    totRecs: totRecs.totRecords,
+  });
+});
+
+app.post("/import", upload.single('filename'), async (req, res) => {
+  if (!req.file || Object.keys(req.file).length === 0) {
+    message = "Error: Import file not uploaded";
+    return res.send(message);
+  };
+  //Read file line by line, inserting records
+  const buffer = req.file.buffer;
+  const lines = buffer.toString().split(/\r?\n/);
+
+  console.log(lines);
+
+  importResult = await dblib.importCustomers(lines)
+
+  // .then(result => {
+  //   console.log("result from importCustomers is:", result);
+  //   res.render("import", {
+  //     type: "post",
+  //     result: result,
+  //     msg: "success",
+  //     cust: req.body
+  //   })
+  // })
+  // .catch(err => {
+  //   //console.log("error detail:", result);
+  //   res.render("import", {
+  //     type: "post",
+  //     msg: `Error: ${err.message}`,
+  //     cust: req.body
+  //   });
+  // });
+  //console.log(importResult);
+  message = `Processing Complete - Processed ${lines.length} records`;
+  //console.log(message);
+});
+
+app.get("/export", async (req, res) => {
+
+  const totRecs = await dblib.getTotalRecords();
+
+  var message = "";
+  res.render("export", {
+    type: "get",
+    totRecs: totRecs.totRecords,
+    message: message
+  });
+});
+
+app.post("/export", async (req, res) => {
+
+  exportResult = await dblib.exportCustomers();
+
+  res.header("Content-Type", "text/csv");
+  res.attachment(`${req.body.filename}.csv`);
+  res.send(exportResult);
+});
+

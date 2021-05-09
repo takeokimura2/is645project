@@ -227,9 +227,77 @@ const addCustomers = (customer) => {
 
 }
 
+const importCustomers = async (lines) => {
+
+  const sql = "INSERT INTO CUSTOMER (cusid, cusfname, cuslname, cusstate, cussalesytd, cussalesprev) VALUES ($1, $2, $3, $4, $5, $6)";
+
+  let totalCount = 0;
+  let successCount = 0;
+  let errorCount = 0;
+  let errorList = [];
+
+  async function importRecord() {
+    await lines.forEach(line => {
+      //console.log(line);
+      customer = line.split(",");
+      //console.log(customer);
+
+      pool.query(sql, customer)
+        .then(result => {
+
+          totalCount += 1;
+          successCount += 1;
+
+        })
+        .catch(err => {
+
+          totalCount += 1;
+          errorCount += 1;
+          message = `Customer ID: ${customer[0]} - ` + err;
+          console.log(message);
+          errorList.push(message)
+        }
+        );
+    });
+  };
+
+  await importRecord();
+
+  return {
+    totalCount: totalCount,
+    successCount: successCount,
+    errorCount: errorCount,
+    errorList: errorList
+  }
+
+}
+
+
+const exportCustomers = () => {
+
+  const sql = "SELECT * FROM CUSTOMER ORDER BY cusid";
+
+  pool.query(sql, [])
+    .then(result => {
+      var output = "";
+      result.rows.forEach(customer => {
+        output += `${customer.cusid},${customer.cusfname},${customer.cuslname},${customer.cusstate},${customer.cussalesytd},${customer.cussalesprev}\r\n`;
+      })
+
+      console.log(output);
+
+      return output;
+    })
+    .catch(err => {
+      console.log(err.message)
+    })
+}
+
 module.exports.getTotalRecords = getTotalRecords;
 module.exports.findCustomers = findCustomers;
 module.exports.editCustomers = editCustomers;
 module.exports.updateCustomers = updateCustomers;
 module.exports.deleteCustomers = deleteCustomers;
 module.exports.addCustomers = addCustomers;
+module.exports.importCustomers = importCustomers;
+module.exports.exportCustomers = exportCustomers;

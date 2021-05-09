@@ -19,9 +19,11 @@
 
 
   <% if (type==="post" ) { %>
-    <% if (result==="Error" ) { %>
+    <% if (result.trans==="Error" ) { %>
       <h3>Error creating new customer</h3>
-      <h4>msg</h4>
+      <h4>
+        <%= result.result %>
+      </h4>
       <% } else { %>
         <h3>New Customer Created!</h3>
         <% } %>
