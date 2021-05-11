@@ -262,9 +262,14 @@ app.post("/import", upload.single('filename'), async (req, res) => {
 
   const totRecs = await dblib.getTotalRecords();
 
-  dblib.importCustomers(lines)
+  importResult = dblib.importCustomers(lines)
     .then(result => {
       console.log("result from importCustomers is:", result);
+
+      // message = "Import Summary";
+      // message += `Records Processed: ${result.totalCount}`;
+      // console.log(message);
+
       res.render("import", {
         type: "post",
         totRecs: totRecs.totRecords,
