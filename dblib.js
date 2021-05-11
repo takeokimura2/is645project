@@ -236,32 +236,27 @@ const importCustomers = async (lines) => {
   let errorCount = 0;
   let errorList = [];
 
-  async function importRecord() {
-    await lines.forEach(line => {
-      //console.log(line);
-      customer = line.split(",");
-      //console.log(customer);
+  for (line of lines) {
+    //console.log(line);
+    customer = line.split(",");
+    //console.log(customer);
 
-      pool.query(sql, customer)
-        .then(result => {
+    await pool.query(sql, customer)
+      .then(result => {
 
-          totalCount += 1;
-          successCount += 1;
+        totalCount += 1;
+        successCount += 1;
 
-        })
-        .catch(err => {
+      })
+      .catch(err => {
 
-          totalCount += 1;
-          errorCount += 1;
-          message = `Customer ID: ${customer[0]} - ` + err;
-          console.log(message);
-          errorList.push(message)
-        }
-        );
-    });
+        totalCount += 1;
+        errorCount += 1;
+        message = `Customer ID: ${customer[0]} - ` + err;
+        //console.log(message);
+        errorList.push(message)
+      });
   };
-
-  await importRecord();
 
   return {
     totalCount: totalCount,
@@ -269,7 +264,6 @@ const importCustomers = async (lines) => {
     errorCount: errorCount,
     errorList: errorList
   }
-
 }
 
 

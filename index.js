@@ -30,6 +30,19 @@ app.listen(process.env.PORT || 3000, () => {
   console.log("Server started (http://localhost:3000/) !");
 });
 
+// Add packages
+require("dotenv").config();
+// Add database package and connection string
+const { Pool } = require('pg');
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+});
+
+
+
 // Setup routes
 app.get("/", (req, res) => {
   //res.send("Root resource - Up and running!")
@@ -247,28 +260,29 @@ app.post("/import", upload.single('filename'), async (req, res) => {
 
   console.log(lines);
 
-  importResult = await dblib.importCustomers(lines)
+  const totRecs = await dblib.getTotalRecords();
 
-  // .then(result => {
-  //   console.log("result from importCustomers is:", result);
-  //   res.render("import", {
-  //     type: "post",
-  //     result: result,
-  //     msg: "success",
-  //     cust: req.body
-  //   })
-  // })
-  // .catch(err => {
-  //   //console.log("error detail:", result);
-  //   res.render("import", {
-  //     type: "post",
-  //     msg: `Error: ${err.message}`,
-  //     cust: req.body
-  //   });
-  // });
-  //console.log(importResult);
-  message = `Processing Complete - Processed ${lines.length} records`;
-  //console.log(message);
+  dblib.importCustomers(lines)
+    .then(result => {
+      console.log("result from importCustomers is:", result);
+      res.render("import", {
+        type: "post",
+        totRecs: totRecs.totRecords,
+        totalCount: result.totalCount,
+        successCount: result.successCount,
+        errorCount: result.errorCount,
+        errorList: result.errorList,
+        msg: "success",
+      })
+    })
+    .catch(err => {
+      console.log("error detail:", result);
+      res.render("import", {
+        type: "post",
+        msg: `Error: ${err.message}`,
+      });
+    });
+
 });
 
 app.get("/export", async (req, res) => {
@@ -283,12 +297,27 @@ app.get("/export", async (req, res) => {
   });
 });
 
-app.post("/export", async (req, res) => {
+app.post("/export", (req, res) => {
 
-  exportResult = await dblib.exportCustomers();
+  const sql = "SELECT * FROM CUSTOMER ORDER BY cusid";
 
-  res.header("Content-Type", "text/csv");
-  res.attachment(`${req.body.filename}.csv`);
-  res.send(exportResult);
-});
+  pool.query(sql, [])
+    .then(result => {
+      var output = "";
+      result.rows.forEach(customer => {
+        output += `${customer.cusid},${customer.cusfname},${customer.cuslname},${customer.cusstate},${customer.cussalesytd},${customer.cussalesprev}\r\n`;
+      })
+
+      console.log(output);
+
+      res.header("Content-Type", "text/csv");
+      res.attachment(`${req.body.filename}`);
+      return res.send(output);
+    })
+    .catch(err => {
+      console.log(err.message)
+    })
+
+})
+
 
